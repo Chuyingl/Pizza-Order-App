@@ -10,7 +10,43 @@ io.of("/pizza").on("connection", socket=>{
   }).then(
       client =>{
         const db =client.db("pizza-order-db");
-        const pizzaCollection =db.collection("pizzas");
+        const pizzasCollection =db.collection("pizzas");
+        pizzasCollection.find({}).toArray((err,documents) =>{
+            socket.emit('pizzaList', documents);
+        });
+        const pizzaOrdersCollection = db.collection("pizzaOrders");
+        pizzaOrdersCollection.aggregate([
+            {
+                $group:{
+                    _id: "$pizzaName",
+                    count:{
+                        $sum:1
+                    }
+                }
+            }
+        ]).toArray((err,documents) => {
+            socket.join("orders");
+            socket.emit("pizzaOrdersCount", documents);
+        })
+        socket.on("newPizzaOrders", order =>{
+            socket.join("orders");
+            pizzaOrdersCollection.insertOne(order).then(
+                refreshedOrder =>{
+                    pizzaOrdersCollection.aggregate([
+                        {
+                            $group:{
+                                _id: "$pizzaName",
+                                count:{
+                                    $sum:1
+                                }
+                            }
+                        }
+                    ]).toArray((err,documents) => {
+                        io.of("/pizza").to("orders").emit("pizzaOrdersCount", documents);
+                    })
+                }
+            )
+        })
       }
   )
 })
