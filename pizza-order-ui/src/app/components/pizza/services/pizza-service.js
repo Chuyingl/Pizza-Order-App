@@ -17,13 +17,14 @@ class PizzaService {
 
     getPizzaOrderCountByPizzaName() {
         return new Observable(observer =>{
-            this._socket.on("pizzaOrderCount", pizzaCount=>{
+            this._socket.on("pizzaOrdersCount", pizzaCount=>{
+                console.log('current count', pizzaCount)
                 observer.next(pizzaCount);
             });
         })
     }
     newCustomerOrder(order){
-        this._socket.emit("newPizzaOrder", order);
+        this._socket.emit("newPizzaOrders", order);
     }
 }
 

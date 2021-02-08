@@ -30,11 +30,13 @@ io.of("/pizza").on("connection", socket=>{
                 }
             }
         ]).toArray((err,documents) => {
+            console.log('get count')
             socket.join("orders");
             socket.emit("pizzaOrdersCount", documents);
         })
         socket.on("newPizzaOrders", order =>{
             socket.join("orders");
+            console.log('new order')
             pizzaOrdersCollection.insertOne(order).then(
                 refreshedOrder =>{
                     pizzaOrdersCollection.aggregate([
